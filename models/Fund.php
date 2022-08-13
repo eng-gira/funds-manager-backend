@@ -130,12 +130,15 @@ class Fund extends DB
     public static function setFundName($id, $newFundName): array|bool
     {
         $allFunds = static::all();
-        $existingFundsNames = array_map(function ($fund) {
-            return $fund["fundName"];
-        }, $allFunds);
+        if ($allFunds !== false) {
+            $existingFundsNames = array_map(function ($fund) {
+                return $fund["fundName"];
+            }, $allFunds);
+        }
+
         // validations
         $fund = static::find($id);
-        if ($fund === false || !is_string($newFundName) || strlen($newFundName) < 3 || in_array($newFundName, $existingFundsNames)) {
+        if ($fund === false || !is_string($newFundName) || strlen($newFundName) < 3 || ($allFunds !== false && in_array($newFundName, $existingFundsNames))) {
             return false;
         }
         // proceed
@@ -159,11 +162,13 @@ class Fund extends DB
         $fund = static::find($id);
         if ($fund === false) return false;
 
-        $totalPercentages = 0.0;
         $allFunds = static::all();
-        foreach ($allFunds as $f) $totalPercentages += $f["fundPercentage"];
-        if (!is_numeric($newFundPercentage) || $newFundPercentage <= 0 || ($totalPercentages + $newFundPercentage > 100)) {
-            return false;
+        if ($allFunds !== false) {
+            $totalPercentages = 0.0;
+            foreach ($allFunds as $f) $totalPercentages += $f["fundPercentage"];
+            if (!is_numeric($newFundPercentage) || $newFundPercentage <= 0 || ($totalPercentages + $newFundPercentage > 100)) {
+                return false;
+            }
         }
         // proceed
         $sql = "UPDATE funds SET fundPercentage = ?, updatedOn = ? WHERE id = ?";
@@ -248,6 +253,40 @@ class Fund extends DB
         }
         return false;
     }
+
+    public static function depositToAll($amount): bool
+    {
+        // validate
+        $allFunds = static::all();
+        if ($allFunds === false) {
+            return false;
+        }
+
+        // proceed
+        $conn = DB::connect();
+
+        foreach ($allFunds as $fund) {
+            $sql = "UPDATE funds SET balance = ?, updatedOn = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            if ($stmt) {
+                $addedBalance = floatval($fund["fundPercentage"] / 100) * floatval($amount);
+                $newBalance = floatval($fund["balance"]) + $addedBalance;
+                $id = $fund["id"];
+                $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
+                $stmt->bind_param("ssi", $newBalance, $updatedOn, $id);
+
+                if (!$stmt->execute()) {
+                    // if any failed, return false
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static function delete($id): bool
     {
         // validation

@@ -11,13 +11,18 @@ class Deposit extends DB
     private float $depositedAmount; // stored in the DB as a string.
     private string $notes;
 
+    /**
+     * @param string $depositSource
+     * @param string|int $depositedTo: either "all" or a fund's id.
+     * @param float $depositedAmount
+     * @param string $notes
+     */
     public function __construct($depositSource, $depositedTo, $depositedAmount, $notes = "")
     {
         $this->depositSource = $depositSource;
 
         if ($depositedTo != "all") {
-            $fund = Fund::find(intval($depositedTo));
-            $this->depositedTo = $fund["fundName"];
+            $this->depositedTo = intval($depositedTo);
         } else {
             $this->depositedTo = $depositedTo;
         }
@@ -36,10 +41,11 @@ class Deposit extends DB
         $result = $conn->query($sql);
         if ($result->num_rows != 0) {
             while ($row = $result->fetch_assoc()) {
+                $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : Fund::find(intval($row["depositedTo"]))["fundName"];
                 $deposits[count($deposits)] = [
                     "id" => $row["id"],
                     "depositSource" => $row["depositSource"],
-                    "depositedTo" => $row["depositedTo"],
+                    "depositedTo" => $depositedToModified,
                     "depositedAmount" => floatval($row["depositedAmount"]),
                     "notes" => $row["notes"],
                     "createdOn" => $row["createdOn"],
@@ -76,12 +82,51 @@ class Deposit extends DB
                     );
                     $stmt->fetch();
 
+                    $depositedToModified = $depositedTo == "all" ? $depositedTo : Fund::find(intval($depositedTo))["fundName"];
+
                     return [
-                        "id" => $id, "depositSource" => $depositSource, "depositedTo" => $depositedTo,
+                        "id" => $id, "depositSource" => $depositSource, "depositedTo" => $depositedToModified,
                         "depositedAmount" => floatval($depositedAmount), "notes" => $notes, "createdOn" => $createdOn,
                         "updatedOn" => $updatedOn,
                     ];
                 }
+            }
+        }
+
+        return false;
+    }
+
+    public static function whereFundIdIs($fundId): array|bool
+    {
+        $fund = Fund::find(intval($fundId));
+        if ($fund === false) return false;
+
+        $conn = DB::connect();
+        $sql = "SELECT * FROM deposits WHERE depositedTo = ? OR depositedTo = ?";
+
+        if ($stmt = $conn->prepare($sql)) {
+            $all = "all";
+            $stmt->bind_param("ss", $fundId, $all);
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                $deposits = [];
+
+                while ($row = $result->fetch_assoc()) {
+                    $depositPortion = floatval($row["depositedAmount"]);
+                    if ($row["depositedTo"] == "all") {
+                        $depositPortion *= floatval($fund["fundPercentage"] / 100);
+                    }
+
+                    $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : Fund::find(intval($row["depositedTo"]))["fundName"];
+
+                    $deposits[count($deposits)] = [
+                        "id" => $row["id"], "depositSource" => $row["depositSource"], "depositedTo" => $depositedToModified,
+                        "depositedAmount" => $depositPortion, "notes" => $row["notes"], "createdOn" => $row["createdOn"],
+                        "updatedOn" => $row["updatedOn"],
+                    ];
+                }
+
+                return $deposits;
             }
         }
 

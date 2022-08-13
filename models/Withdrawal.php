@@ -7,19 +7,16 @@ class Withdrawal extends DB
     /**
      * @value an existing fund's id.
      */
-    private int $withdrawnFrom;
+    private string $withdrawnFrom;
     private float $withdrawnAmount; // stored in the DB as a string.
     private string $notes;
 
-    public function __construct($withdrawalReason, $fundId, $withdrawnAmount, $notes = "")
+    public function __construct($withdrawnFrom, $withdrawnAmount, $withdrawalReason = "", $notes = "")
     {
-        $this->withdrawalReason = $withdrawalReason;
-
-        $fund = Fund::find($fundId);
-        if ($fund === false) return false;
-        $this->withdrawnFrom = $fund["fundName"];
-
+        $this->withdrawnFrom = $withdrawnFrom;
         $this->withdrawnAmount = $withdrawnAmount;
+
+        $this->withdrawalReason = $withdrawalReason;
         $this->notes = $notes;
     }
 
@@ -36,7 +33,7 @@ class Withdrawal extends DB
                 $withdrawals[count($withdrawals)] = [
                     "id" => $row["id"],
                     "withdrawalReason" => $row["withdrawalReason"],
-                    "withdrawnFrom" => $row["withdrawnFrom"],
+                    "withdrawnFrom" => Fund::find(intval($row["withdrawnFrom"]))["fundName"],
                     "withdrawnAmount" => floatval($row["withdrawnAmount"]),
                     "notes" => $row["notes"],
                     "createdOn" => $row["createdOn"],
@@ -74,11 +71,38 @@ class Withdrawal extends DB
                     $stmt->fetch();
 
                     return [
-                        "id" => $id, "withdrawalReason" => $withdrawalReason, "withdrawnFrom" => $withdrawnFrom,
+                        "id" => $id, "withdrawalReason" => $withdrawalReason, "withdrawnFrom" => Fund::find(intval($withdrawnFrom))["fundName"],
                         "withdrawnAmount" => floatval($withdrawnAmount), "notes" => $notes, "createdOn" => $createdOn,
                         "updatedOn" => $updatedOn,
                     ];
                 }
+            }
+        }
+
+        return false;
+    }
+
+    public static function whereFundIdIs($fundId): array|bool
+    {
+        $conn = DB::connect();
+        $sql = "SELECT * FROM withdrawals WHERE withdrawnFrom = ?";
+
+        if ($stmt = $conn->prepare($sql)) {
+            $strFundId = strval($fundId);
+            $stmt->bind_param("s", $strFundId);
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                $withdrawals = [];
+
+                while ($row = $result->fetch_assoc()) {
+                    $withdrawals[count($withdrawals)] = [
+                        "id" => $row["id"], "withdrawalReason" => $row["withdrawalReason"], "withdrawnFrom" => Fund::find(intval($row["withdrawnFrom"]))["fundName"],
+                        "withdrawnAmount" => $row["withdrawnAmount"], "notes" => $row["notes"], "createdOn" => $row["createdOn"],
+                        "updatedOn" => $row["updatedOn"],
+                    ];
+                }
+
+                return $withdrawals;
             }
         }
 
