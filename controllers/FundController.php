@@ -10,9 +10,9 @@ class FundController
      */
     public static function index(): void
     {
+        header('Access-Control-Allow-Origin: *');
         $funds = Fund::all();
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
 
         echo json_encode($funds);
@@ -23,6 +23,8 @@ class FundController
      */
     public static function store(): void
     {
+        header('Access-Control-Allow-Origin: *');
+
         // Get the POSTed data.
         $data = json_decode(file_get_contents("php://input"));
         $fundName = $data->fundName;
@@ -33,48 +35,47 @@ class FundController
         $fund = new Fund($fundName, $fundPercentage, $balance, $size, $notes);
         $message = $fund->save();
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["message" => $message ? "Succesfully Created Resource" : "Failed to Create Resource"]);
     }
 
     public static function setFundName($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->fundName == null) return false;
         $result = Fund::setFundName($id, $data->fundName);
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
     public static function setFundPercentage($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->fundPercentage == null) return false;
         $result = Fund::setFundPercentage($id, $data->fundPercentage);
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
     public static function setSize($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->size == null) return false;
         $result = Fund::setSize($id, $data->size);
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
     public static function setNotes($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->notes == null) return false;
         $result = Fund::setNotes($id, $data->notes);
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
@@ -84,6 +85,7 @@ class FundController
      */
     public static function deposit($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->amount == null || !is_numeric($data->amount) || $data->depositedTo == null || $data->depositSource) return false;
 
@@ -97,7 +99,6 @@ class FundController
 
         $result = Fund::setBalance($id, $newBalance) && $deposit->save();
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
@@ -107,6 +108,7 @@ class FundController
      */
     public static function withdraw($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->amount == null || !is_numeric($data->amount)) return false;
         $fund = Fund::find($id);
@@ -120,18 +122,17 @@ class FundController
 
         $result = Fund::setBalance($id, $newBalance) && $withdrawal->save();
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
 
     public static function setBalance($id)
     {
+        header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if ($data->balance == null) return false;
         $result = Fund::setBalance($id, $data->balance);
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
@@ -148,9 +149,9 @@ class FundController
      */
     public static function delete($id): void
     {
+        header('Access-Control-Allow-Origin: *');
         $result = Fund::delete($id);
 
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : "Successfully Deleted Fund."]);
     }
