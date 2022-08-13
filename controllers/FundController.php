@@ -107,12 +107,7 @@ class FundController
         $result = false;
         if (strval($data->depositedTo) != "all") {
             // deposit to a specific fund
-            $fund = Fund::find(intval($data->depositedTo));
-            if ($fund === false) return false;
-            $currentBalance = $fund["balance"];
-            $newBalance = $currentBalance + abs($data->depositedAmount);
-
-            $result = Fund::setBalance(intval($data->depositedTo), $newBalance) && $deposit->save();
+            $result = Fund::deposit(intval($data->depositedTo), $data->depositedAmount) && $deposit->save();
         } else {
             $result = Fund::depositToAll($data->depositedAmount) && $deposit->save();
         }
@@ -129,31 +124,27 @@ class FundController
         header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->withdrawnAmount) || !is_numeric($data->withdrawnAmount) || !isset($data->withdrawnFrom)) return false;
-        $fund = Fund::find(intval($data->withdrawnFrom));
-        if ($fund === false) return false;
-        $currentBalance = $fund["balance"];
-        $newBalance = $currentBalance - abs($data->withdrawnAmount);
 
         $withdrawalNotes = isset($data->notes) ? $data->notes : "";
         $withdrawalReason = isset($data->withdrawalReason) ? $data->withdrawalReason : "";
         $withdrawal = new Withdrawal(intval($data->withdrawnFrom), abs($data->withdrawnAmount), $withdrawalReason, $withdrawalNotes);
 
-        $result = Fund::setBalance(intval($data->withdrawnFrom), $newBalance) && $withdrawal->save();
+        $result = Fund::withdraw(intval($data->withdrawnFrom), $data->withdrawnAmount) && $withdrawal->save();
 
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
 
-    public static function setBalance($id)
-    {
-        header('Access-Control-Allow-Origin: *');
-        $data = json_decode(file_get_contents("php://input"));
-        if (!isset($data->balance)) return false;
-        $result = Fund::setBalance($id, $data->balance);
+    // public static function setBalance($id)
+    // {
+    //     header('Access-Control-Allow-Origin: *');
+    //     $data = json_decode(file_get_contents("php://input"));
+    //     if (!isset($data->balance)) return false;
+    //     $result = Fund::setBalance($id, $data->balance);
 
-        header('Content-Type: application/json');
-        echo json_encode(["result" => $result === false ? "Failed." : $result]);
-    }
+    //     header('Content-Type: application/json');
+    //     echo json_encode(["result" => $result === false ? "Failed." : $result]);
+    // }
 
     /**
      * Transfer funds (POST)

@@ -185,30 +185,6 @@ class Fund extends DB
         }
         return false;
     }
-    public static function setBalance($id, $newBalance): array|bool
-    {
-        // validations
-        $fund = static::find($id);
-        if ($fund === false) return false;
-
-        if (!is_numeric($newBalance) || $newBalance < 0) {
-            return false;
-        }
-        // proceed
-        $sql = "UPDATE funds SET balance = ?, updatedOn = ? WHERE id = ?";
-        $conn = DB::connect();
-        $stmt = $conn->prepare($sql);
-        if ($stmt) {
-            $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
-            $stmt->bind_param("ssi", $newBalance, $updatedOn, $id);
-
-            if ($stmt->execute()) {
-                // return the newly-updated fund
-                return static::find($id);
-            }
-        }
-        return false;
-    }
     public static function setSize($id, $newSize): array|bool
     {
         // validations
@@ -253,7 +229,58 @@ class Fund extends DB
         }
         return false;
     }
+    public static function deposit($id, $depositedAmount): array|bool
+    {
+        // validations
+        $fund = static::find($id);
+        if ($fund === false) return false;
 
+        if (!is_numeric($depositedAmount) || $depositedAmount <= 0) {
+            return false;
+        }
+        // proceed
+        $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ? WHERE id = ?";
+        $conn = DB::connect();
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
+            $lastDeposit = $updatedOn;
+            $newBalance = floatval($fund["balance"]) + floatval(abs($depositedAmount));
+            $stmt->bind_param("sssi", $newBalance, $updatedOn, $lastDeposit, $id);
+
+            if ($stmt->execute()) {
+                // return the newly-updated fund
+                return static::find($id);
+            }
+        }
+        return false;
+    }
+    public static function withdraw($id, $withdrawnAmount): array|bool
+    {
+        // validations
+        $fund = static::find($id);
+        if ($fund === false) return false;
+
+        if (!is_numeric($withdrawnAmount) || $withdrawnAmount <= 0) {
+            return false;
+        }
+        // proceed
+        $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastWithdrawal = ? WHERE id = ?";
+        $conn = DB::connect();
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
+            $lastWithdrawal = $updatedOn;
+            $newBalance = floatval($fund["balance"]) - floatval(abs($withdrawnAmount));
+            $stmt->bind_param("sssi", $newBalance, $updatedOn, $lastWithdrawal, $id);
+
+            if ($stmt->execute()) {
+                // return the newly-updated fund
+                return static::find($id);
+            }
+        }
+        return false;
+    }
     public static function depositToAll($amount): bool
     {
         // validate
@@ -266,14 +293,15 @@ class Fund extends DB
         $conn = DB::connect();
 
         foreach ($allFunds as $fund) {
-            $sql = "UPDATE funds SET balance = ?, updatedOn = ? WHERE id = ?";
+            $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
             if ($stmt) {
                 $addedBalance = floatval($fund["fundPercentage"] / 100) * floatval($amount);
                 $newBalance = floatval($fund["balance"]) + $addedBalance;
                 $id = $fund["id"];
                 $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
-                $stmt->bind_param("ssi", $newBalance, $updatedOn, $id);
+                $lastDeposit = $updatedOn;
+                $stmt->bind_param("sssi", $newBalance, $updatedOn, $lastDeposit, $id);
 
                 if (!$stmt->execute()) {
                     // if any failed, return false
