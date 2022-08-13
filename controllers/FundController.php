@@ -29,9 +29,9 @@ class FundController
         $data = json_decode(file_get_contents("php://input"));
         $fundName = $data->fundName;
         $fundPercentage = $data->fundPercentage;
-        $balance = $data->balance != null ? $data->balance : 0.0;
-        $size = $data->size != null ? $data->size : "Open";
-        $notes = $data->notes != null ? $data->notes : "";
+        $balance = isset($data->balance) ? $data->balance : 0.0;
+        $size = isset($data->size) ? $data->size : "Open";
+        $notes = isset($data->notes) ? $data->notes : "";
         $fund = new Fund($fundName, $fundPercentage, $balance, $size, $notes);
         $message = $fund->save();
 

@@ -97,25 +97,29 @@ class Fund extends DB
     public function save(): bool
     {
         $allFunds = static::all();
-        $existingFundsNames = array_map(function ($fund) {
-            return $fund["fundName"];
-        }, $allFunds);
+        if ($allFunds !== false) {
+            $existingFundsNames = array_map(function ($fund) {
+                return $fund["fundName"];
+            }, $allFunds);
+        }
         // validation 1
-        if (!is_string($this->fundName) || strlen($this->fundName) < 3 || in_array($this->fundName, $existingFundsNames)) {
+        if (!is_string($this->fundName) || strlen($this->fundName) < 3 || ($allFunds !== false && in_array($this->fundName, $existingFundsNames))) {
             return false;
         }
         // validation 2
         $totalPercentages = 0.0;
-        foreach ($allFunds as $f) $totalPercentages += $f["fundPercentage"];
-        if (!is_numeric($this->fundPercentage) || $this->fundPercentage <= 0 || ($totalPercentages + $this->fundPercentage > 100)) {
-            return false;
+        if ($allFunds !== false) {
+            foreach ($allFunds as $f) $totalPercentages += $f["fundPercentage"];
+            if (!is_numeric($this->fundPercentage) || $this->fundPercentage <= 0 || ($totalPercentages + $this->fundPercentage > 100)) {
+                return false;
+            }
         }
         // Proceed
         $conn = DB::connect();
         $sql = "INSERT INTO funds (fundName, fundPercentage, balance, size, notes, createdOn) VALUES (?, ?, ?, ?, ?, ?)";
         if ($stmt = $conn->prepare($sql)) {
             $createdOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
-            $stmt->bind_param("ssss", $this->fundName, $this->fundPercentage, $this->balance, $this->size, $this->notes, $createdOn);
+            $stmt->bind_param("ssssss", $this->fundName, $this->fundPercentage, $this->balance, $this->size, $this->notes, $createdOn);
             if ($stmt->execute()) return true;
         }
 
