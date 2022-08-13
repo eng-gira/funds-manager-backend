@@ -83,9 +83,9 @@ class Fund extends DB
                     $stmt->fetch();
 
                     return [
-                        "id" => $id, "fundName" => $fundName, "fundPercentage" => $fundPercentage, "balance" => $balance,
-                        "size" => $size, "notes" => $notes, "createdOn" => $createdOn, "updatedOn" => $updatedOn,
-                        "lastDeposit" => $lastDeposit, "lastWithdrawal" => $lastWithdrawal,
+                        "id" => $id, "fundName" => $fundName, "fundPercentage" => floatval($fundPercentage),
+                        "balance" => floatval($balance), "size" => floatval($size), "notes" => $notes, "createdOn" => $createdOn,
+                        "updatedOn" => $updatedOn, "lastDeposit" => $lastDeposit, "lastWithdrawal" => $lastWithdrawal,
                     ];
                 }
             }
@@ -98,7 +98,7 @@ class Fund extends DB
     {
         $allFunds = static::all();
         $existingFundsNames = array_map(function ($fund) {
-            return $fund->fundName;
+            return $fund["fundName"];
         }, $allFunds);
         // validation 1
         if (!is_string($this->fundName) || strlen($this->fundName) < 3 || in_array($this->fundName, $existingFundsNames)) {
@@ -127,7 +127,7 @@ class Fund extends DB
     {
         $allFunds = static::all();
         $existingFundsNames = array_map(function ($fund) {
-            return $fund->fundName;
+            return $fund["fundName"];
         }, $allFunds);
         // validations
         $fund = static::find($id);

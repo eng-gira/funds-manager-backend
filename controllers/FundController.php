@@ -1,7 +1,8 @@
 <?php
 
 include_once MODEL . "Fund.php";
-
+include_once MODEL . "Deposit.php";
+include_once MODEL . "Withdrawal.php";
 class FundController
 {
     /**
@@ -84,13 +85,17 @@ class FundController
     public static function deposit($id)
     {
         $data = json_decode(file_get_contents("php://input"));
-        if ($data->amount == null || !is_numeric($data->amount)) return false;
+        if ($data->amount == null || !is_numeric($data->amount) || $data->depositedTo == null || $data->depositSource) return false;
 
         $fund = Fund::find($id);
         if ($fund === false) return false;
         $currentBalance = $fund["balance"];
         $newBalance = $currentBalance + abs($data->amount);
-        $result = Fund::setBalance($id, $newBalance);
+
+        $depositNotes = $data->notes == null ? "" : $data->notes;
+        $deposit = new Deposit($data->depositSource, $data->depositedTo, $data->amount, $depositNotes);
+
+        $result = Fund::setBalance($id, $newBalance) && $deposit->save();
 
         header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
@@ -108,7 +113,12 @@ class FundController
         if ($fund === false) return false;
         $currentBalance = $fund["balance"];
         $newBalance = $currentBalance - abs($data->amount);
-        $result = Fund::setBalance($id, $newBalance);
+
+        $withdrawalNotes = $data->notes == null ? "" : $data->notes;
+        $withdrawalReason = $data->withdrawalReason == null ? "" : $data->withdrawalReason;
+        $withdrawal = new Withdrawal($withdrawalReason, $id, abs($data->amount), $withdrawalNotes);
+
+        $result = Fund::setBalance($id, $newBalance) && $withdrawal->save();
 
         header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
