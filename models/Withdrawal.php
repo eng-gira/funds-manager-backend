@@ -30,10 +30,17 @@ class Withdrawal extends DB
         $result = $conn->query($sql);
         if ($result->num_rows != 0) {
             while ($row = $result->fetch_assoc()) {
+                $fund = Fund::find(intval($row["withdrawnFrom"]));
+                $withdrawnFromName = "";
+                if ($fund === false) {
+                    $withdrawnFromName = "Deleted";
+                } else {
+                    $withdrawnFromName = $fund["fundName"];
+                }
                 $withdrawals[count($withdrawals)] = [
                     "id" => $row["id"],
                     "withdrawalReason" => $row["withdrawalReason"],
-                    "withdrawnFrom" => Fund::find(intval($row["withdrawnFrom"]))["fundName"],
+                    "withdrawnFrom" => $withdrawnFromName,
                     "withdrawnAmount" => floatval($row["withdrawnAmount"]),
                     "notes" => $row["notes"],
                     "createdOn" => $row["createdOn"],
@@ -70,8 +77,16 @@ class Withdrawal extends DB
                     );
                     $stmt->fetch();
 
+                    $fund = Fund::find(intval($withdrawnFrom));
+                    $withdrawnFromName = "";
+                    if ($fund === false) {
+                        $withdrawnFromName = "Deleted";
+                    } else {
+                        $withdrawnFromName = $fund["fundName"];
+                    }
+
                     return [
-                        "id" => $id, "withdrawalReason" => $withdrawalReason, "withdrawnFrom" => Fund::find(intval($withdrawnFrom))["fundName"],
+                        "id" => $id, "withdrawalReason" => $withdrawalReason, "withdrawnFrom" => $withdrawnFromName,
                         "withdrawnAmount" => floatval($withdrawnAmount), "notes" => $notes, "createdOn" => $createdOn,
                         "updatedOn" => $updatedOn,
                     ];
@@ -95,8 +110,17 @@ class Withdrawal extends DB
                 $withdrawals = [];
 
                 while ($row = $result->fetch_assoc()) {
+
+                    $fund = Fund::find(intval($row["withdrawnFrom"]));
+                    $withdrawnFromName = "";
+                    if ($fund === false) {
+                        $withdrawnFromName = "Deleted";
+                    } else {
+                        $withdrawnFromName = $fund["fundName"];
+                    }
+
                     $withdrawals[count($withdrawals)] = [
-                        "id" => $row["id"], "withdrawalReason" => $row["withdrawalReason"], "withdrawnFrom" => Fund::find(intval($row["withdrawnFrom"]))["fundName"],
+                        "id" => $row["id"], "withdrawalReason" => $row["withdrawalReason"], "withdrawnFrom" => $withdrawnFromName,
                         "withdrawnAmount" => $row["withdrawnAmount"], "notes" => $row["notes"], "createdOn" => $row["createdOn"],
                         "updatedOn" => $row["updatedOn"],
                     ];

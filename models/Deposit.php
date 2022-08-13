@@ -41,7 +41,17 @@ class Deposit extends DB
         $result = $conn->query($sql);
         if ($result->num_rows != 0) {
             while ($row = $result->fetch_assoc()) {
-                $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : Fund::find(intval($row["depositedTo"]))["fundName"];
+                $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : "Deleted";
+                if ($row["depositedTo"] != "all") {
+                    $fund = Fund::find(intval($row["depositedTo"]));
+                    if ($fund === false) {
+                        $depositedToModified = "Deleted";
+                    } else {
+                        $depositedToModified = $fund["fundName"];
+                    }
+                }
+
+
                 $deposits[count($deposits)] = [
                     "id" => $row["id"],
                     "depositSource" => $row["depositSource"],
@@ -82,7 +92,15 @@ class Deposit extends DB
                     );
                     $stmt->fetch();
 
-                    $depositedToModified = $depositedTo == "all" ? $depositedTo : Fund::find(intval($depositedTo))["fundName"];
+                    $depositedToModified = $depositedTo == "all" ? $depositedTo : "Deleted";
+                    if ($depositedTo != "all") {
+                        $fund = Fund::find(intval($depositedTo));
+                        if ($fund === false) {
+                            $depositedToModified = "Deleted";
+                        } else {
+                            $depositedToModified = $fund["fundName"];
+                        }
+                    }
 
                     return [
                         "id" => $id, "depositSource" => $depositSource, "depositedTo" => $depositedToModified,
@@ -117,7 +135,15 @@ class Deposit extends DB
                         $depositPortion *= floatval($fund["fundPercentage"] / 100);
                     }
 
-                    $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : Fund::find(intval($row["depositedTo"]))["fundName"];
+                    $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : "";
+                    if ($row["depositedTo"] != "all") {
+                        $fund = Fund::find(intval($row["depositedTo"]));
+                        if ($fund === false) {
+                            $depositedToModified = "Deleted";
+                        } else {
+                            $depositedToModified = $fund["fundName"];
+                        }
+                    }
 
                     $deposits[count($deposits)] = [
                         "id" => $row["id"], "depositSource" => $row["depositSource"], "depositedTo" => $depositedToModified,
