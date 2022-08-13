@@ -2,11 +2,11 @@
 
 class Application
 {
-    private $defaultController = "SentenceController";
+    private $defaultController = "FundController";
     private $defaultAction = "index";
     private $defaultParams = [];
 
-    private $controller = "SentenceController";
+    private $controller = "FundController";
     private $action = "index";
     private $params = [];
 
