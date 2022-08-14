@@ -165,7 +165,10 @@ class Fund extends DB
         $allFunds = static::all();
         if ($allFunds !== false) {
             $totalPercentages = 0.0;
-            foreach ($allFunds as $f) $totalPercentages += $f["fundPercentage"];
+            foreach ($allFunds as $f) {
+                if (intval($f["id"]) == $id) continue;
+                $totalPercentages += $f["fundPercentage"];
+            }
             if (!is_numeric($newFundPercentage) || $newFundPercentage <= 0 || ($totalPercentages + $newFundPercentage > 100)) {
                 return false;
             }

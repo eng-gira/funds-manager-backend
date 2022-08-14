@@ -52,41 +52,45 @@ class FundController
         echo json_encode(["message" => $message ? "Succesfully Created Resource" : "Failed to Create Resource"]);
     }
 
-    public static function setFundName($id)
+    public static function setFundName()
     {
         header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
-        if (!isset($data->fundName)) return false;
+        if (!isset($data->id, $data->fundName)) return false;
+        $id = intval($data->id);
         $result = Fund::setFundName($id, $data->fundName);
 
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
-    public static function setFundPercentage($id)
+    public static function setFundPercentage()
     {
         header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
-        if (!isset($data->fundPercentage)) return false;
+        if (!isset($data->id, $data->fundPercentage)) return false;
+        $id = intval($data->id);
         $result = Fund::setFundPercentage($id, $data->fundPercentage);
 
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
-    public static function setSize($id)
+    public static function setSize()
     {
         header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
-        if (!isset($data->size)) return false;
+        if (!isset($data->id, $data->size)) return false;
+        $id = intval($data->id);
         $result = Fund::setSize($id, $data->size);
 
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
     }
-    public static function setNotes($id)
+    public static function setNotes()
     {
         header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
-        if (!isset($data->notes)) return false;
+        if (!isset($data->id, $data->notes)) return false;
+        $id = intval($data->id);
         $result = Fund::setNotes($id, $data->notes);
 
         header('Content-Type: application/json');
