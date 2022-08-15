@@ -3,10 +3,10 @@
 
 class DB
 {
-    private static $host = "localhost";
-    private static $username = "root";
-    private static $pw = "Root1234";
-    private static $dbName = "funds_manager";
+    private static $host = "";
+    private static $username = "";
+    private static $pw = "";
+    private static $dbName = "";
 
     protected static function connect()
     {
