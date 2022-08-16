@@ -1,5 +1,5 @@
 <?php
-include_once "C:\\xampp\\htdocs\\funds-manager-backend\\core\\Application.php";
+include_once "/funds-manager-backend/core/Application.php";
 
 define("ROOT", dirname(__DIR__) . DIRECTORY_SEPARATOR);
 define("MODEL", ROOT . "models" . DIRECTORY_SEPARATOR);
