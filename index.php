@@ -1,7 +1,7 @@
 <?php
 ini_set('display_errors', 1);
 
-include_once dirname(__DIR__) . "core" . DIRECTORY_SEPARATOR . "Application.php";
+include_once "core" . DIRECTORY_SEPARATOR . "Application.php";
 
 define("ROOT", dirname(__DIR__) . DIRECTORY_SEPARATOR);
 
