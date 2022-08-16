@@ -33,13 +33,13 @@ class Application
     {
         $url = $_SERVER["REQUEST_URI"];
 
-        $indexOfPublic = strpos($url, "api/");
+        $indexOfAPI = strpos($url, "api/");
 
-        if ($indexOfPublic === false) return false;
+        if ($indexOfAPI === false) return false;
 
-        $publicLengthPlusOne = strlen("api/");
+        $apiLengthPlusOne = strlen("api/");
 
-        $endPoint = trim(substr($url, $indexOfPublic + $publicLengthPlusOne), "/");
+        $endPoint = trim(substr($url, $indexOfAPI + $apiLengthPlusOne), "/");
         $endPointArr = explode("/", $endPoint);
         if (count($endPointArr) > 0) $this->controller = strlen($endPointArr[0]) > 0 ? $endPointArr[0] . "Controller" : $this->defaultController;
         if (count($endPointArr) > 1) $this->action = strlen($endPointArr[1]) > 0 ? $endPointArr[1] : $this->defaultAction;
