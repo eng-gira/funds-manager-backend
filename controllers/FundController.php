@@ -10,7 +10,7 @@ class FundController
      */
     public static function index(): void
     {
-        header('Access-Control-Allow-Origin: *');
+
         $funds = Fund::all();
 
         header('Content-Type: application/json');

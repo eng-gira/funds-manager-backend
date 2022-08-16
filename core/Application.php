@@ -31,6 +31,8 @@ class Application
 
     private function readEndPoint()
     {
+        header('Access-Control-Allow-Origin: *');
+
         $url = $_SERVER["REQUEST_URI"];
 
         $indexOfAPI = strpos($url, "api/");
