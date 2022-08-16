@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+
 include_once dirname(__DIR__) . "\\funds-manager-backend\\core\\Application.php";
 
 define("ROOT", dirname(__DIR__) . "\\funds-manager-backend" . DIRECTORY_SEPARATOR);
