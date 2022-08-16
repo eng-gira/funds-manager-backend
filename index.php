@@ -1,9 +1,9 @@
 <?php
 ini_set('display_errors', 1);
 
-include_once dirname(__DIR__) . DIRECTORY_SEPARATOR . "funds-manager-backend" . DIRECTORY_SEPARATOR . "core" . DIRECTORY_SEPARATOR . "Application.php";
+include_once dirname(__DIR__) . "funds-manager-backend" . DIRECTORY_SEPARATOR . "core" . DIRECTORY_SEPARATOR . "Application.php";
 
-define("ROOT", dirname(__DIR__) . "\\funds-manager-backend" . DIRECTORY_SEPARATOR);
+define("ROOT", dirname(__DIR__) . "funds-manager-backend" . DIRECTORY_SEPARATOR);
 
 define("MODEL", ROOT . "models" . DIRECTORY_SEPARATOR);
 define("DATA", ROOT . "data" . DIRECTORY_SEPARATOR);
