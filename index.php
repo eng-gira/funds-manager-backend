@@ -1,7 +1,7 @@
 <?php
 ini_set('display_errors', 1);
 
-include_once dirname(__DIR__) . "\\funds-manager-backend\\core\\Application.php";
+include_once dirname(__DIR__) . DIRECTORY_SEPARATOR . "funds-manager-backend" . DIRECTORY_SEPARATOR . "core" . DIRECTORY_SEPARATOR . "Application.php";
 
 define("ROOT", dirname(__DIR__) . "\\funds-manager-backend" . DIRECTORY_SEPARATOR);
 
