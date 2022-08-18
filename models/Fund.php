@@ -1,5 +1,6 @@
 <?php
 include_once DATA . "DB.php";
+include_once INC . "functions.php";
 
 class Fund extends DB
 {
@@ -43,10 +44,10 @@ class Fund extends DB
                     "balance" => floatval($row["balance"]),
                     "size" => floatval($row["size"]),
                     "notes" => $row["notes"],
-                    "createdOn" => $row["createdOn"],
-                    "updatedOn" => $row["updatedOn"],
-                    "lastDeposit" => $row["lastDeposit"],
-                    "lastWithdrawal" => $row["lastWithdrawal"],
+                    "createdOn" => readableTimestamps($row["createdOn"]),
+                    "updatedOn" => readableTimestamps($row["updatedOn"]),
+                    "lastDeposit" => readableTimestamps($row["lastDeposit"]),
+                    "lastWithdrawal" => readableTimestamps($row["lastWithdrawal"]),
                 ];
             }
 
@@ -84,8 +85,8 @@ class Fund extends DB
 
                     return [
                         "id" => $id, "fundName" => $fundName, "fundPercentage" => floatval($fundPercentage),
-                        "balance" => floatval($balance), "size" => floatval($size), "notes" => $notes, "createdOn" => $createdOn,
-                        "updatedOn" => $updatedOn, "lastDeposit" => $lastDeposit, "lastWithdrawal" => $lastWithdrawal,
+                        "balance" => floatval($balance), "size" => floatval($size), "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
+                        "updatedOn" => readableTimestamps($updatedOn), "lastDeposit" => readableTimestamps($lastDeposit), "lastWithdrawal" => readableTimestamps($lastWithdrawal),
                     ];
                 }
             }

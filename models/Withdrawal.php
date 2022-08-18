@@ -43,8 +43,8 @@ class Withdrawal extends DB
                     "withdrawnFrom" => $withdrawnFromName,
                     "withdrawnAmount" => floatval($row["withdrawnAmount"]),
                     "notes" => $row["notes"],
-                    "createdOn" => $row["createdOn"],
-                    "updatedOn" => $row["updatedOn"],
+                    "createdOn" => readableTimestamps($row["createdOn"]),
+                    "updatedOn" => readableTimestamps($row["updatedOn"]),
                 ];
             }
 
@@ -87,8 +87,8 @@ class Withdrawal extends DB
 
                     return [
                         "id" => $id, "withdrawalReason" => $withdrawalReason, "withdrawnFrom" => $withdrawnFromName,
-                        "withdrawnAmount" => floatval($withdrawnAmount), "notes" => $notes, "createdOn" => $createdOn,
-                        "updatedOn" => $updatedOn,
+                        "withdrawnAmount" => floatval($withdrawnAmount), "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
+                        "updatedOn" => readableTimestamps($updatedOn),
                     ];
                 }
             }
@@ -121,8 +121,8 @@ class Withdrawal extends DB
 
                     $withdrawals[count($withdrawals)] = [
                         "id" => $row["id"], "withdrawalReason" => $row["withdrawalReason"], "withdrawnFrom" => $withdrawnFromName,
-                        "withdrawnAmount" => $row["withdrawnAmount"], "notes" => $row["notes"], "createdOn" => $row["createdOn"],
-                        "updatedOn" => $row["updatedOn"],
+                        "withdrawnAmount" => $row["withdrawnAmount"], "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]),
                     ];
                 }
 

@@ -12,6 +12,10 @@ include_once "core" . DIRECTORY_SEPARATOR . "Application.php";
 define("MODEL",  "models" . DIRECTORY_SEPARATOR);
 define("DATA",  "data" . DIRECTORY_SEPARATOR);
 define("CONTROLLER",  "controllers" . DIRECTORY_SEPARATOR);
+define("INC",  "inc" . DIRECTORY_SEPARATOR);
+
+
+date_default_timezone_set("Africa/Cairo");
 
 
 new Application;

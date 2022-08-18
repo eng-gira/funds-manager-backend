@@ -58,8 +58,8 @@ class Deposit extends DB
                     "depositedTo" => $depositedToModified,
                     "depositedAmount" => floatval($row["depositedAmount"]),
                     "notes" => $row["notes"],
-                    "createdOn" => $row["createdOn"],
-                    "updatedOn" => $row["updatedOn"],
+                    "createdOn" => readableTimestamps($row["createdOn"]),
+                    "updatedOn" => readableTimestamps($row["updatedOn"]),
                 ];
             }
 
@@ -104,8 +104,8 @@ class Deposit extends DB
 
                     return [
                         "id" => $id, "depositSource" => $depositSource, "depositedTo" => $depositedToModified,
-                        "depositedAmount" => floatval($depositedAmount), "notes" => $notes, "createdOn" => $createdOn,
-                        "updatedOn" => $updatedOn,
+                        "depositedAmount" => floatval($depositedAmount), "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
+                        "updatedOn" => readableTimestamps($updatedOn),
                     ];
                 }
             }
@@ -147,8 +147,8 @@ class Deposit extends DB
 
                     $deposits[count($deposits)] = [
                         "id" => $row["id"], "depositSource" => $row["depositSource"], "depositedTo" => $depositedToModified,
-                        "depositedAmount" => $depositPortion, "notes" => $row["notes"], "createdOn" => $row["createdOn"],
-                        "updatedOn" => $row["updatedOn"],
+                        "depositedAmount" => $depositPortion, "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]),
                     ];
                 }
 
