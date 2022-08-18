@@ -10,7 +10,7 @@
 
 ### Install
 
-Run git clone <repo>
+Run the command `git clone <repo>`
 
 ### Run
 
