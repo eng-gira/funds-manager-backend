@@ -1,11 +1,20 @@
 # funds-manager-api
 
 ## Description
+
 - A RESTful API for my funds-manager application.
 - It follows the MVC architecture (without views). 
 - Uses a MySQL database.
 - Was built using Core PHP only.
 - Hosted on Heroku.
+
+### Install
+
+Run git clone <repo>
+
+### Run
+
+Start using the API
 
 ## How to use this API
 ### The End-Points
