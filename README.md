@@ -8,13 +8,10 @@
 - Was built using Core PHP only.
 - Hosted on Heroku.
 
-### Install
+### Installation and Running
 
 Run the command `git clone <repo>`
-
-### Run
-
-Start using the API
+and start using the API.
 
 ## How to use this API
 ### The End-Points
