@@ -1,18 +1,17 @@
 <?php
 
+include_once INC . "Env.php";
 
 class DB
 {
     protected static function connect()
     {
-        $url = parse_url(getenv("CLEARDB_DATABASE_URL"));
-        $host = $url["host"];
-        $username = $url["user"];
-        $pw = $url["pass"];
-        $dbName = substr($url["path"], 1);
+        $host = '127.0.0.1';
+        $username = Env::get('MYSQL_USERNAME');
+        $pw = Env::get('MYSQL_PASSWORD');
+        $dbName = Env::get('MYSQL_DB');
 
         $conn = new \mysqli($host, $username, $pw, $dbName);
-
 
         return $conn;
     }

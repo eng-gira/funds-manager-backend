@@ -20,7 +20,7 @@ class FundController
 
     public static function readSingle($id)
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
 
         $fund = Fund::find($id);
         if ($fund !== false) {
@@ -36,7 +36,7 @@ class FundController
      */
     public static function store(): void
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
 
         // Get the POSTed data.
         $data = json_decode(file_get_contents("php://input"));
@@ -54,7 +54,7 @@ class FundController
 
     public static function setFundName()
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->fundName)) return false;
         $id = intval($data->id);
@@ -65,7 +65,7 @@ class FundController
     }
     public static function setFundPercentage()
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->fundPercentage)) return false;
         $id = intval($data->id);
@@ -76,7 +76,7 @@ class FundController
     }
     public static function setSize()
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->size)) return false;
         $id = intval($data->id);
@@ -87,7 +87,7 @@ class FundController
     }
     public static function setNotes()
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->notes)) return false;
         $id = intval($data->id);
@@ -102,7 +102,7 @@ class FundController
      */
     public static function deposit()
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->depositedAmount, $data->depositedTo, $data->depositSource) || !is_numeric($data->depositedAmount)) return false;
 
@@ -125,7 +125,7 @@ class FundController
      */
     public static function withdraw()
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->withdrawnAmount) || !is_numeric($data->withdrawnAmount) || !isset($data->withdrawnFrom)) return false;
 
@@ -141,7 +141,7 @@ class FundController
 
     // public static function setBalance($id)
     // {
-    //     header('Access-Control-Allow-Origin: *');
+    // //     header('Access-Control-Allow-Origin: *');
     //     $data = json_decode(file_get_contents("php://input"));
     //     if (!isset($data->balance)) return false;
     //     $result = Fund::setBalance($id, $data->balance);
@@ -159,7 +159,7 @@ class FundController
 
     public static function getDepositsHistory($for)
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         if ($for == "all") {
             $depositsHistory = Deposit::all();
             header('Content-Type: application/json');
@@ -175,7 +175,7 @@ class FundController
 
     public static function getWithdrawalsHistory($for)
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         if ($for == "all") {
             $withdrawalsHistory = Withdrawal::all();
             header('Content-Type: application/json');
@@ -193,7 +193,7 @@ class FundController
      */
     public static function delete($id): void
     {
-        header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Origin: *');
         $result = Fund::delete($id);
 
         header('Content-Type: application/json');
