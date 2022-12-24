@@ -42,12 +42,14 @@ class Fund extends DB
                     "fundName" => $row["fundName"],
                     "fundPercentage" => floatval($row["fundPercentage"]),
                     "balance" => floatval($row["balance"]),
-                    "size" => floatval($row["size"]),
+                    "size" => $row["size"],
                     "notes" => $row["notes"],
                     "createdOn" => readableTimestamps($row["createdOn"]),
                     "updatedOn" => readableTimestamps($row["updatedOn"]),
                     "lastDeposit" => readableTimestamps($row["lastDeposit"]),
                     "lastWithdrawal" => readableTimestamps($row["lastWithdrawal"]),
+                    "totalDeposits" => floatval($row["totalDeposits"]),
+                    "totalWithdrawals" => floatval($row["totalWithdrawals"]),
                 ];
             }
 
@@ -80,13 +82,16 @@ class Fund extends DB
                         $updatedOn,
                         $lastDeposit,
                         $lastWithdrawal,
+                        $totalDeposits,
+                        $totalWithdrawals
                     );
                     $stmt->fetch();
 
                     return [
                         "id" => $id, "fundName" => $fundName, "fundPercentage" => floatval($fundPercentage),
-                        "balance" => floatval($balance), "size" => floatval($size), "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
+                        "balance" => floatval($balance), "size" => $size, "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
                         "updatedOn" => readableTimestamps($updatedOn), "lastDeposit" => readableTimestamps($lastDeposit), "lastWithdrawal" => readableTimestamps($lastWithdrawal),
+                        "totalDeposits" => floatval($totalDeposits), "totalWithdrawals" => floatval($totalWithdrawals),
                     ];
                 }
             }
@@ -111,7 +116,7 @@ class Fund extends DB
         $totalPercentages = 0.0;
         if ($allFunds !== false) {
             foreach ($allFunds as $f) $totalPercentages += $f["fundPercentage"];
-            if (!is_numeric($this->fundPercentage) || $this->fundPercentage <= 0 || ($totalPercentages + $this->fundPercentage > 100)) {
+            if (!is_numeric($this->fundPercentage) || $this->fundPercentage < 0 || ($totalPercentages + $this->fundPercentage > 100)) {
                 return false;
             }
         }
@@ -170,7 +175,7 @@ class Fund extends DB
                 if (intval($f["id"]) == $id) continue;
                 $totalPercentages += $f["fundPercentage"];
             }
-            if (!is_numeric($newFundPercentage) || $newFundPercentage <= 0 || ($totalPercentages + $newFundPercentage > 100)) {
+            if (!is_numeric($newFundPercentage) || $newFundPercentage < 0 || ($totalPercentages + $newFundPercentage > 100)) {
                 return false;
             }
         }
@@ -243,14 +248,18 @@ class Fund extends DB
             return false;
         }
         // proceed
-        $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ? WHERE id = ?";
+        $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ?, totalDeposits = ? WHERE id = ?";
         $conn = DB::connect();
         $stmt = $conn->prepare($sql);
         if ($stmt) {
             $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
             $lastDeposit = $updatedOn;
             $newBalance = floatval($fund["balance"]) + floatval(abs($depositedAmount));
-            $stmt->bind_param("sssi", $newBalance, $updatedOn, $lastDeposit, $id);
+
+            //
+            $newTotalDeposits = floatval($fund["totalDeposits"]) + floatval(abs($depositedAmount));
+
+            $stmt->bind_param("ssssi", $newBalance, $updatedOn, $lastDeposit, $newTotalDeposits, $id);
 
             if ($stmt->execute()) {
                 // return the newly-updated fund
@@ -269,14 +278,18 @@ class Fund extends DB
             return false;
         }
         // proceed
-        $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastWithdrawal = ? WHERE id = ?";
+        $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastWithdrawal = ?, totalWithdrawals = ? WHERE id = ?";
         $conn = DB::connect();
         $stmt = $conn->prepare($sql);
         if ($stmt) {
             $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
             $lastWithdrawal = $updatedOn;
             $newBalance = floatval($fund["balance"]) - floatval(abs($withdrawnAmount));
-            $stmt->bind_param("sssi", $newBalance, $updatedOn, $lastWithdrawal, $id);
+
+            //
+            $newTotalWithdrawals = floatval($fund["totalWithdrawals"]) + floatval(abs($withdrawnAmount));
+
+            $stmt->bind_param("ssssi", $newBalance, $updatedOn, $lastWithdrawal, $newTotalWithdrawals, $id);
 
             if ($stmt->execute()) {
                 // return the newly-updated fund
@@ -297,15 +310,19 @@ class Fund extends DB
         $conn = DB::connect();
 
         foreach ($allFunds as $fund) {
-            $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ? WHERE id = ?";
+            $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ?, totalDeposits = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
             if ($stmt) {
                 $addedBalance = floatval($fund["fundPercentage"] / 100) * floatval($amount);
                 $newBalance = floatval($fund["balance"]) + $addedBalance;
+
+                //
+                $newTotalDeposits = floatval($fund["totalDeposits"]) + $addedBalance;
+
                 $id = $fund["id"];
                 $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
                 $lastDeposit = $updatedOn;
-                $stmt->bind_param("sssi", $newBalance, $updatedOn, $lastDeposit, $id);
+                $stmt->bind_param("ssssi", $newBalance, $updatedOn, $lastDeposit, $newTotalDeposits, $id);
 
                 if (!$stmt->execute()) {
                     // if any failed, return false
@@ -317,6 +334,17 @@ class Fund extends DB
         }
 
         return true;
+    }
+
+    /**
+     * Add the fund with the passed id to archive.
+     */
+    public static function archive($id): bool
+    {
+        /**
+         * @todo implement this method
+         */
+        return false;
     }
 
     public static function delete($id): bool
@@ -333,9 +361,13 @@ class Fund extends DB
         if ($stmt = $conn->prepare($sql)) {
             $stmt->bind_param("i", $id);
 
-            if ($stmt->execute()) {
-                return true;
-            }
+            /**
+             * @todo announce to Deposit and Withdrawal that the fund, with id and name, was deleted. 
+             * @todo in Deposit and in Withdrawal, replace the fund's name in the views with (Deleted) {Fund's Name}
+             */
+            // if ($stmt->execute()) {
+            //     return true;
+            // }
         }
         return false;
     }
