@@ -13,7 +13,7 @@ class Withdrawal extends DB implements Model
     private string $notes;
     private int $userId;
 
-    public function __construct($withdrawnFrom, $withdrawnAmount, $withdrawalReason = "", $notes = "", $userId)
+    public function __construct($withdrawnFrom, $withdrawnAmount, $withdrawalReason, $notes, $userId)
     {
         $this->withdrawnFrom = $withdrawnFrom;
         $this->withdrawnAmount = $withdrawnAmount;

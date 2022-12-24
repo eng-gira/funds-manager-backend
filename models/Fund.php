@@ -23,7 +23,7 @@ class Fund extends DB implements Model
     private string $lastWithdrawal;
     private int $userId;
 
-    public function __construct($fundName, $fundPercentage, $balance = 0.0, $size = "Open", $notes = "", $userId)
+    public function __construct($fundName, $fundPercentage, $balance, $size, $notes, $userId)
     {
         $this->fundName = $fundName;
         $this->fundPercentage = $fundPercentage;

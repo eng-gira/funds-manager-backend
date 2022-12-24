@@ -19,7 +19,7 @@ class Deposit extends DB implements Model
      * @param string $notes
      * @param int $userId
      */
-    public function __construct($depositSource, $depositedTo, $depositedAmount, $notes = "", $userId)
+    public function __construct($depositSource, $depositedTo, $depositedAmount, $notes, $userId)
     {
         $this->depositSource = $depositSource;
 
