@@ -1,5 +1,7 @@
 <?php
 
+include_once INC . "Env.php";
+
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

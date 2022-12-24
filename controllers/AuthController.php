@@ -1,6 +1,5 @@
 <?php
 
-include_once INC . "Env.php";
 include_once SERVICE . "Auth.php";
 include_once MODEL . "User.php";
 
