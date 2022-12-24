@@ -187,6 +187,77 @@ class FundController
             return;
         }
     }
+    public static function getWithdrawalById($id)
+    {
+        // header('Access-Control-Allow-Origin: *');
+
+        $withdrawal = Withdrawal::find($id);
+        if ($withdrawal !== false) {
+            header('Content-Type: application/json');
+            echo json_encode($withdrawal);
+        } else {
+            return false;
+        }
+    }
+
+    public static function setWithdrawalNotes()
+    {
+        // header('Access-Control-Allow-Origin: *');
+
+        $data = json_decode(file_get_contents("php://input"));
+        if (!isset($data->id)) return false;
+        $id = intval($data->id);
+
+        $result = Withdrawal::setNotes($id, $data->notes);
+
+        header('Content-Type: application/json');
+        echo json_encode(["result" => $result === false ? "Failed." : $result]);
+    }
+    public static function getDepositById($id)
+    {
+        // header('Access-Control-Allow-Origin: *');
+
+        $deposit = Deposit::find($id);
+        if ($deposit !== false) {
+            header('Content-Type: application/json');
+            echo json_encode($deposit);
+        } else {
+            return false;
+        }
+    }
+
+    public static function setDepositNotes()
+    {
+        // header('Access-Control-Allow-Origin: *');
+
+        $data = json_decode(file_get_contents("php://input"));
+        if (!isset($data->id)) return false;
+        $id = intval($data->id);
+
+        $result = Deposit::setNotes($id, $data->notes);
+
+        header('Content-Type: application/json');
+        echo json_encode(["result" => $result === false ? "Failed." : $result]);
+    }
+
+    /**
+     * Export the funds data (with withdrawals and deposits) in to file(s).
+     */
+    public static function export()
+    {
+        $funds = Fund::all();
+        $withdrawals = Withdrawal::all();
+        $deposits = Deposit::all();
+
+        $currentDateTime = date("Y") . "-" . date("m") . "-" . date("d") . "_" . date("H") . "-" . date("i") . "-" . date("s");
+        $fundsFileName = "funds_$currentDateTime";
+        $withdrawalsFileName = "withdrawals_$currentDateTime";
+        $depositsFileName = "deposits_$currentDateTime";
+
+        file_put_contents($fundsFileName, json_encode($funds));
+        file_put_contents($withdrawalsFileName, json_encode($withdrawals));
+        file_put_contents($depositsFileName, json_encode($deposits));
+    }
 
     /**
      * Delete an existing fund.
