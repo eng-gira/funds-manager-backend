@@ -1,8 +1,12 @@
 <?php
 include_once DATA . "DB.php";
 include_once INC . "functions.php";
+include_once MODEL . "Model.php";
+include_once MODEL . "Deposit.php";
+include_once MODEL . "Withdrawal.php";
 
-class Fund extends DB
+
+class Fund extends DB implements Model
 {
     /**
      * @var string fundName
@@ -17,43 +21,49 @@ class Fund extends DB
     private string $updatedOn;
     private string $lastDeposit;
     private string $lastWithdrawal;
+    private int $userId;
 
-    public function __construct($fundName, $fundPercentage, $balance = 0.0, $size = "Open", $notes = "")
+    public function __construct($fundName, $fundPercentage, $balance = 0.0, $size = "Open", $notes = "", $userId)
     {
         $this->fundName = $fundName;
         $this->fundPercentage = $fundPercentage;
         $this->balance = $balance;
         $this->size = $size;
         $this->notes = $notes;
+        $this->userId = $userId;
     }
 
-    public static function all(): array|bool
+    public static function whereUserIdIs($userId): array|bool
     {
-        $funds = [];
+        $user = User::find(intval($userId));
+        if ($user === false) return false;
 
         $conn = DB::connect();
+        $sql = "SELECT * FROM funds WHERE userId = ?";
 
-        $sql = "SELECT * FROM funds";
-        $result = $conn->query($sql);
-        if ($result->num_rows != 0) {
-            while ($row = $result->fetch_assoc()) {
-                $funds[count($funds)] = [
-                    "id" => $row["id"],
-                    "fundName" => $row["fundName"],
-                    "fundPercentage" => floatval($row["fundPercentage"]),
-                    "balance" => floatval($row["balance"]),
-                    "size" => $row["size"],
-                    "notes" => $row["notes"],
-                    "createdOn" => readableTimestamps($row["createdOn"]),
-                    "updatedOn" => readableTimestamps($row["updatedOn"]),
-                    "lastDeposit" => readableTimestamps($row["lastDeposit"]),
-                    "lastWithdrawal" => readableTimestamps($row["lastWithdrawal"]),
-                    "totalDeposits" => floatval($row["totalDeposits"]),
-                    "totalWithdrawals" => floatval($row["totalWithdrawals"]),
-                ];
+        if ($stmt = $conn->prepare($sql)) {
+            $intvalUserId = intval($userId);
+            $stmt->bind_param("i", $intvalUserId);
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                $funds = [];
+
+                while ($row = $result->fetch_assoc()) {
+                        
+                    $funds[count($funds)] = [
+                        "id" => $row["id"], 
+                        "fundName" => $row["fundName"], 
+                        "fundPercentage" => floatval($row["fundPercentage"]),
+                        "balance" => floatval($row["balance"]), "size" => $row["size"], "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]), "lastDeposit" => readableTimestamps($row["lastDeposit"]), 
+                        "lastWithdrawal" => readableTimestamps($row["lastWithdrawal"]),
+                        "totalDeposits" => floatval($row["totalDeposits"]), "totalWithdrawals" => floatval($row["totalWithdrawals"]),
+                        'userId' => intval($row["userId"]),
+                    ];
+                }
+
+                return $funds;
             }
-
-            return $funds;
         }
 
         return false;
@@ -83,7 +93,8 @@ class Fund extends DB
                         $lastDeposit,
                         $lastWithdrawal,
                         $totalDeposits,
-                        $totalWithdrawals
+                        $totalWithdrawals,
+                        $userId
                     );
                     $stmt->fetch();
 
@@ -92,6 +103,7 @@ class Fund extends DB
                         "balance" => floatval($balance), "size" => $size, "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
                         "updatedOn" => readableTimestamps($updatedOn), "lastDeposit" => readableTimestamps($lastDeposit), "lastWithdrawal" => readableTimestamps($lastWithdrawal),
                         "totalDeposits" => floatval($totalDeposits), "totalWithdrawals" => floatval($totalWithdrawals),
+                        'userId' => intval($userId)
                     ];
                 }
             }
@@ -102,7 +114,8 @@ class Fund extends DB
 
     public function save(): bool
     {
-        $allFunds = static::all();
+        $userId = $this->userId;
+        $allFunds = static::whereUserIdIs($userId);
         if ($allFunds !== false) {
             $existingFundsNames = array_map(function ($fund) {
                 return $fund["fundName"];
@@ -122,10 +135,12 @@ class Fund extends DB
         }
         // Proceed
         $conn = DB::connect();
-        $sql = "INSERT INTO funds (fundName, fundPercentage, balance, size, notes, createdOn) VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO funds (fundName, fundPercentage, balance, size, notes, createdOn, userId) VALUES (?, ?, ?, ?, ?, ?, ?)";
         if ($stmt = $conn->prepare($sql)) {
             $createdOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
-            $stmt->bind_param("ssssss", $this->fundName, $this->fundPercentage, $this->balance, $this->size, $this->notes, $createdOn);
+            $intvalUserId = intval($userId);
+            $stmt->bind_param("ssssssi", $this->fundName, $this->fundPercentage, $this->balance, $this->size, $this->notes, $createdOn, 
+                $intvalUserId);
             if ($stmt->execute()) return true;
         }
 
@@ -135,18 +150,19 @@ class Fund extends DB
     // update: setters
     public static function setFundName($id, $newFundName): array|bool
     {
-        $allFunds = static::all();
+        // validations
+        $fund = static::find($id);
+        $userId = $fund['userId'];
+        $allFunds = static::whereUserIdIs($userId);
         if ($allFunds !== false) {
             $existingFundsNames = array_map(function ($fund) {
                 return $fund["fundName"];
             }, $allFunds);
         }
-
-        // validations
-        $fund = static::find($id);
         if ($fund === false || !is_string($newFundName) || strlen($newFundName) < 3 || ($allFunds !== false && in_array($newFundName, $existingFundsNames))) {
             return false;
         }
+
         // proceed
         $sql = "UPDATE funds SET fundName = ?, updatedOn = ? WHERE id = ?";
         $conn = DB::connect();
@@ -168,7 +184,8 @@ class Fund extends DB
         $fund = static::find($id);
         if ($fund === false) return false;
 
-        $allFunds = static::all();
+        $userId = $fund['userId'];
+        $allFunds = static::whereUserIdIs($userId);
         if ($allFunds !== false) {
             $totalPercentages = 0.0;
             foreach ($allFunds as $f) {
@@ -238,7 +255,7 @@ class Fund extends DB
         }
         return false;
     }
-    public static function deposit($id, $depositedAmount): array|bool
+    public static function deposit($id, $depositedAmount, $depositSource, $depositNotes, $userId): array|bool
     {
         // validations
         $fund = static::find($id);
@@ -262,13 +279,15 @@ class Fund extends DB
             $stmt->bind_param("ssssi", $newBalance, $updatedOn, $lastDeposit, $newTotalDeposits, $id);
 
             if ($stmt->execute()) {
+                self::logDeposit($depositSource, $id, $depositedAmount, $depositNotes, $userId);                
+                
                 // return the newly-updated fund
                 return static::find($id);
             }
         }
         return false;
     }
-    public static function withdraw($id, $withdrawnAmount): array|bool
+    public static function withdraw($id, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId): array|bool
     {
         // validations
         $fund = static::find($id);
@@ -292,45 +311,29 @@ class Fund extends DB
             $stmt->bind_param("ssssi", $newBalance, $updatedOn, $lastWithdrawal, $newTotalWithdrawals, $id);
 
             if ($stmt->execute()) {
+                self::logWithdrawal($id, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId);
+
                 // return the newly-updated fund
                 return static::find($id);
             }
         }
         return false;
     }
-    public static function depositToAll($amount): bool
+    public static function depositToAll($amountToDistribute, $depositSource, $depositNotes, $userId): bool
     {
         // validate
-        $allFunds = static::all();
+        $allFunds = static::whereUserIdIs($userId);
         if ($allFunds === false) {
             return false;
         }
-
-        // proceed
-        $conn = DB::connect();
-
         foreach ($allFunds as $fund) {
-            $sql = "UPDATE funds SET balance = ?, updatedOn = ?, lastDeposit = ?, totalDeposits = ? WHERE id = ?";
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $addedBalance = floatval($fund["fundPercentage"] / 100) * floatval($amount);
-                $newBalance = floatval($fund["balance"]) + $addedBalance;
+            $addedBalance = floatval($fund["fundPercentage"] / 100) * floatval($amountToDistribute);
 
-                //
-                $newTotalDeposits = floatval($fund["totalDeposits"]) + $addedBalance;
-
-                $id = $fund["id"];
-                $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
-                $lastDeposit = $updatedOn;
-                $stmt->bind_param("ssssi", $newBalance, $updatedOn, $lastDeposit, $newTotalDeposits, $id);
-
-                if (!$stmt->execute()) {
-                    // if any failed, return false
-                    return false;
-                }
-            } else {
+            if (self::deposit($fund["id"], $addedBalance, $depositSource, $depositNotes, $userId) === false) {
+                // if any failed, return false
                 return false;
             }
+
         }
 
         return true;
@@ -370,5 +373,15 @@ class Fund extends DB
             // }
         }
         return false;
+    }
+
+    private function logDeposit($depositSource, $depositedTo, $depositedAmount, $notes, $userId) {
+        $deposit = new Deposit($depositSource, $depositedTo, $depositedAmount, $notes, $userId);
+        return $deposit->save();
+    }
+
+    private function logWithdrawal($fundId, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId) {
+        $withdrawal = new Withdrawal($fundId, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId);
+        return $withdrawal->save();
     }
 }

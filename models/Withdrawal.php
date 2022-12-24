@@ -1,7 +1,8 @@
 <?php
 include_once DATA . "DB.php";
 include_once MODEL . "Fund.php";
-class Withdrawal extends DB
+include_once MODEL . "Model.php";
+class Withdrawal extends DB implements Model
 {
     private string $withdrawalReason;
     /**
@@ -10,45 +11,50 @@ class Withdrawal extends DB
     private string $withdrawnFrom;
     private float $withdrawnAmount; // stored in the DB as a string.
     private string $notes;
+    private int $userId;
 
-    public function __construct($withdrawnFrom, $withdrawnAmount, $withdrawalReason = "", $notes = "")
+    public function __construct($withdrawnFrom, $withdrawnAmount, $withdrawalReason = "", $notes = "", $userId)
     {
         $this->withdrawnFrom = $withdrawnFrom;
         $this->withdrawnAmount = $withdrawnAmount;
 
         $this->withdrawalReason = $withdrawalReason;
         $this->notes = $notes;
+        $this->userId = $userId;
     }
 
-    public static function all(): array|bool
+    public static function whereUserIdIs($userId): array|bool
     {
-        $withdrawals = [];
-
         $conn = DB::connect();
+        $sql = "SELECT * FROM withdrawals WHERE user_id = ?";
 
-        $sql = "SELECT * FROM withdrawals";
-        $result = $conn->query($sql);
-        if ($result->num_rows != 0) {
-            while ($row = $result->fetch_assoc()) {
-                $fund = Fund::find(intval($row["withdrawnFrom"]));
-                $withdrawnFromName = "";
-                if ($fund === false) {
-                    $withdrawnFromName = "Deleted";
-                } else {
-                    $withdrawnFromName = $fund["fundName"];
+        if ($stmt = $conn->prepare($sql)) {
+            $intvalUserId = intval($userId);
+            $stmt->bind_param("i", $intvalUserId);
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                $withdrawals = [];
+
+                while ($row = $result->fetch_assoc()) {
+
+                    $fund = Fund::find(intval($row["withdrawnFrom"]));
+                    $withdrawnFromName = "";
+                    if ($fund === false) {
+                        $withdrawnFromName = "Deleted";
+                    } else {
+                        $withdrawnFromName = $fund["fundName"];
+                    }
+
+                    $withdrawals[count($withdrawals)] = [
+                        "id" => $row["id"], "withdrawalReason" => $row["withdrawalReason"], "withdrawnFrom" => $withdrawnFromName,
+                        "withdrawnAmount" => $row["withdrawnAmount"], "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]),
+                        "userId" => intval($row["userId"])
+                    ];
                 }
-                $withdrawals[count($withdrawals)] = [
-                    "id" => $row["id"],
-                    "withdrawalReason" => $row["withdrawalReason"],
-                    "withdrawnFrom" => $withdrawnFromName,
-                    "withdrawnAmount" => floatval($row["withdrawnAmount"]),
-                    "notes" => $row["notes"],
-                    "createdOn" => readableTimestamps($row["createdOn"]),
-                    "updatedOn" => readableTimestamps($row["updatedOn"]),
-                ];
-            }
 
-            return $withdrawals;
+                return $withdrawals;
+            }
         }
 
         return false;
@@ -74,6 +80,7 @@ class Withdrawal extends DB
                         $notes,
                         $createdOn,
                         $updatedOn,
+                        $userId,
                     );
                     $stmt->fetch();
 
@@ -89,6 +96,7 @@ class Withdrawal extends DB
                         "id" => $id, "withdrawalReason" => $withdrawalReason, "withdrawnFrom" => $withdrawnFromName,
                         "withdrawnAmount" => floatval($withdrawnAmount), "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
                         "updatedOn" => readableTimestamps($updatedOn),
+                        "userId" => intval($userId)
                     ];
                 }
             }
@@ -122,7 +130,7 @@ class Withdrawal extends DB
                     $withdrawals[count($withdrawals)] = [
                         "id" => $row["id"], "withdrawalReason" => $row["withdrawalReason"], "withdrawnFrom" => $withdrawnFromName,
                         "withdrawnAmount" => $row["withdrawnAmount"], "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
-                        "updatedOn" => readableTimestamps($row["updatedOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]), "userId" => $row["userId"]
                     ];
                 }
 
@@ -139,17 +147,21 @@ class Withdrawal extends DB
         if (!is_numeric($this->withdrawnAmount) || $this->withdrawnAmount <= 0) return false;
 
         // proceed
+        $userId = $this->userId;
+        
         $conn = DB::connect();
-        $sql = "INSERT INTO withdrawals (withdrawalReason, withdrawnFrom, withdrawnAmount, notes, createdOn) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO withdrawals (withdrawalReason, withdrawnFrom, withdrawnAmount, notes, createdOn, userId) VALUES (?, ?, ?, ?, ?, ?)";
         if ($stmt = $conn->prepare($sql)) {
             $createdOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
+            $intvalUserId = intval($userId);
             $stmt->bind_param(
-                "sssss",
+                "sssssi",
                 $this->withdrawalReason,
                 $this->withdrawnFrom,
                 $this->withdrawnAmount,
                 $this->notes,
-                $createdOn
+                $createdOn,
+                $intvalUserId
             );
             if ($stmt->execute()) return true;
         }

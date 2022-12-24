@@ -13,3 +13,13 @@ function readableTimestamps($date)
 
     return "$yyyy-$mm-$dd" . " " . "$hh:$ii:$ss";
 }
+
+function getTokenFromRequestHeader(): string|false {
+    $authHeader = apache_request_headers()['Authorization'] ?? false;
+
+    if($authHeader == false) { 
+        return false;
+    }
+    
+    return substr($authHeader, strlen('Bearer '));
+}

@@ -1,8 +1,10 @@
 <?php
 
 require_once './data/DB.php';
+include_once MODEL . "Model.php";
 
-class User extends DB {
+class User extends DB implements Model
+{
     public static function all() {
         $users = [];
 
@@ -51,12 +53,12 @@ class User extends DB {
 
         return false;
     }
-    public static function findById(int $id) {
+    public static function find($id) {
         $conn = DB::connect();
         $sql = "SELECT id, name, email FROM users WHERE id = ?";
 
         if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("i", $id);
+            $stmt->bind_param("i", intval($id));
 
             if ($stmt->execute()) {
                 $stmt->store_result();

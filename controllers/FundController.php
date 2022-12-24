@@ -3,6 +3,8 @@
 include_once MODEL . "Fund.php";
 include_once MODEL . "Deposit.php";
 include_once MODEL . "Withdrawal.php";
+include_once SERVICE . "Auth.php";
+include_once INC . "functions.php";
 class FundController
 {
     /**
@@ -10,8 +12,12 @@ class FundController
      */
     public static function index(): void
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
 
-        $funds = Fund::all();
+        $funds = Fund::whereUserIdIs(Auth::userId());
 
         header('Content-Type: application/json');
 
@@ -21,12 +27,22 @@ class FundController
     public static function readSingle($id)
     {
         // header('Access-Control-Allow-Origin: *');
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
 
         $fund = Fund::find($id);
         if ($fund !== false) {
+            if($fund['userId'] != Auth::userId()) {
+                http_response_code(403);
+                return false;
+            }
+
             header('Content-Type: application/json');
             echo json_encode($fund);
         } else {
+            http_response_code(551);
             return false;
         }
     }
@@ -38,6 +54,11 @@ class FundController
     {
         // header('Access-Control-Allow-Origin: *');
 
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // Get the POSTed data.
         $data = json_decode(file_get_contents("php://input"));
         $fundName = $data->fundName;
@@ -45,7 +66,8 @@ class FundController
         $balance = isset($data->balance) ? $data->balance : 0.0;
         $size = isset($data->size) ? $data->size : "Open";
         $notes = isset($data->notes) ? $data->notes : "";
-        $fund = new Fund($fundName, $fundPercentage, $balance, $size, $notes);
+        $fund = new Fund($fundName, $fundPercentage, $balance, $size, $notes, Auth::userId());
+
         $message = $fund->save();
 
         header('Content-Type: application/json');
@@ -54,10 +76,23 @@ class FundController
 
     public static function setFundName()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->fundName)) return false;
         $id = intval($data->id);
+
+        $fund = Fund::find($id);
+        if(!$fund) { http_response_code(551); return false; }
+        if($fund['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
+
         $result = Fund::setFundName($id, $data->fundName);
 
         header('Content-Type: application/json');
@@ -65,10 +100,21 @@ class FundController
     }
     public static function setFundPercentage()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->fundPercentage)) return false;
         $id = intval($data->id);
+        $fund = Fund::find($id);
+        if(!$fund) { http_response_code(551); return false; }
+        if($fund['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
         $result = Fund::setFundPercentage($id, $data->fundPercentage);
 
         header('Content-Type: application/json');
@@ -76,10 +122,21 @@ class FundController
     }
     public static function setSize()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->size)) return false;
         $id = intval($data->id);
+        $fund = Fund::find($id);
+        if(!$fund) { http_response_code(551); return false; }
+        if($fund['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
         $result = Fund::setSize($id, $data->size);
 
         header('Content-Type: application/json');
@@ -87,10 +144,21 @@ class FundController
     }
     public static function setNotes()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id, $data->notes)) return false;
         $id = intval($data->id);
+        $fund = Fund::find($id);
+        if(!$fund) { http_response_code(551); return false; }
+        if($fund['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
         $result = Fund::setNotes($id, $data->notes);
 
         header('Content-Type: application/json');
@@ -102,18 +170,22 @@ class FundController
      */
     public static function deposit()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->depositedAmount, $data->depositedTo, $data->depositSource) || !is_numeric($data->depositedAmount)) return false;
 
         $depositNotes = isset($data->notes) ? $data->notes : "";
-        $deposit = new Deposit($data->depositSource, $data->depositedTo, $data->depositedAmount, $depositNotes);
         $result = false;
         if (strval($data->depositedTo) != "all") {
             // deposit to a specific fund
-            $result = Fund::deposit(intval($data->depositedTo), $data->depositedAmount) && $deposit->save();
+            $result = Fund::deposit(intval($data->depositedTo), $data->depositedAmount, $data->depositSource, $depositNotes, Auth::userId());
         } else {
-            $result = Fund::depositToAll($data->depositedAmount) && $deposit->save();
+            $result = Fund::depositToAll($data->depositedAmount, $data->depositSource, $depositNotes, Auth::userId());
         }
 
         header('Content-Type: application/json');
@@ -125,15 +197,19 @@ class FundController
      */
     public static function withdraw()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->withdrawnAmount) || !is_numeric($data->withdrawnAmount) || !isset($data->withdrawnFrom)) return false;
 
         $withdrawalNotes = isset($data->notes) ? $data->notes : "";
         $withdrawalReason = isset($data->withdrawalReason) ? $data->withdrawalReason : "";
-        $withdrawal = new Withdrawal(intval($data->withdrawnFrom), abs($data->withdrawnAmount), $withdrawalReason, $withdrawalNotes);
 
-        $result = Fund::withdraw(intval($data->withdrawnFrom), $data->withdrawnAmount) && $withdrawal->save();
+        $result = Fund::withdraw(intval($data->withdrawnFrom), $data->withdrawnAmount, $withdrawalReason, $withdrawalNotes, Auth::userId());
 
         header('Content-Type: application/json');
         echo json_encode(["result" => $result === false ? "Failed." : $result]);
@@ -159,9 +235,14 @@ class FundController
 
     public static function getDepositsHistory($for)
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         if ($for == "all") {
-            $depositsHistory = Deposit::all();
+            $depositsHistory = Deposit::whereUserIdIs(Auth::userId());
             header('Content-Type: application/json');
             echo json_encode($depositsHistory !== false ? $depositsHistory : []);
             return;
@@ -175,9 +256,14 @@ class FundController
 
     public static function getWithdrawalsHistory($for)
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         if ($for == "all") {
-            $withdrawalsHistory = Withdrawal::all();
+            $withdrawalsHistory = Withdrawal::whereUserIdIs(Auth::userId());
             header('Content-Type: application/json');
             echo json_encode($withdrawalsHistory !== false ? $withdrawalsHistory : []);
         } else {
@@ -189,6 +275,11 @@ class FundController
     }
     public static function getWithdrawalById($id)
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
 
         $withdrawal = Withdrawal::find($id);
@@ -202,6 +293,12 @@ class FundController
 
     public static function setWithdrawalNotes()
     {
+
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
 
         $data = json_decode(file_get_contents("php://input"));
@@ -215,6 +312,11 @@ class FundController
     }
     public static function getDepositById($id)
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
 
         $deposit = Deposit::find($id);
@@ -228,6 +330,10 @@ class FundController
 
     public static function setDepositNotes()
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
         // header('Access-Control-Allow-Origin: *');
 
         $data = json_decode(file_get_contents("php://input"));
@@ -245,9 +351,16 @@ class FundController
      */
     public static function export()
     {
-        $funds = Fund::all();
-        $withdrawals = Withdrawal::all();
-        $deposits = Deposit::all();
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }  
+
+        $userId = Auth::userId();
+
+        $funds = Fund::whereUserIdIs($userId);
+        $withdrawals = Withdrawal::whereUserIdIs($userId);
+        $deposits = Deposit::whereUserIdIs($userId);
 
         $currentDateTime = date("Y") . "-" . date("m") . "-" . date("d") . "_" . date("H") . "-" . date("i") . "-" . date("s");
         $fundsFileName = "funds_$currentDateTime";
@@ -264,6 +377,11 @@ class FundController
      */
     public static function delete($id): void
     {
+        if(Auth::userId() === false) {
+            http_response_code(401);
+            exit;
+        }
+
         // header('Access-Control-Allow-Origin: *');
         $result = Fund::delete($id);
 

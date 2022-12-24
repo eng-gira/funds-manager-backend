@@ -1,69 +1,71 @@
 <?php
 include_once DATA . "DB.php";
 include_once MODEL . "Fund.php";
-class Deposit extends DB
+include_once MODEL . "Model.php";
+class Deposit extends DB implements Model
 {
     private string $depositSource;
     /**
-     * @value either an existing fund's id or "all"
      */
     private string $depositedTo;
     private float $depositedAmount; // stored in the DB as a string.
     private string $notes;
+    private int $userId;
 
     /**
      * @param string $depositSource
-     * @param string|int $depositedTo: either "all" or a fund's id.
+     * @param int $depositedTo - fund's id.
      * @param float $depositedAmount
      * @param string $notes
+     * @param int $userId
      */
-    public function __construct($depositSource, $depositedTo, $depositedAmount, $notes = "")
+    public function __construct($depositSource, $depositedTo, $depositedAmount, $notes = "", $userId)
     {
         $this->depositSource = $depositSource;
 
-        if ($depositedTo != "all") {
-            $this->depositedTo = intval($depositedTo);
-        } else {
-            $this->depositedTo = $depositedTo;
-        }
+    
+        $this->depositedTo = intval($depositedTo);
+    
 
         $this->depositedAmount = $depositedAmount;
         $this->notes = $notes;
+        $this->userId = $userId;
     }
 
-    public static function all(): array|bool
+    public static function whereUserIdIs($userId): array|bool
     {
-        $deposits = [];
+        $user = User::find(intval($userId));
+        if ($user === false) return false;
 
         $conn = DB::connect();
+        $sql = "SELECT * FROM deposits WHERE userId = ?";
 
-        $sql = "SELECT * FROM deposits";
-        $result = $conn->query($sql);
-        if ($result->num_rows != 0) {
-            while ($row = $result->fetch_assoc()) {
-                $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : "Deleted";
-                if ($row["depositedTo"] != "all") {
+        if ($stmt = $conn->prepare($sql)) {
+            $intvalUserId = intval($userId);
+            $stmt->bind_param("i", $intvalUserId);
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                $deposits = [];
+
+                while ($row = $result->fetch_assoc()) {
+                    $depositPortion = floatval($row["depositedAmount"]);
+                        
                     $fund = Fund::find(intval($row["depositedTo"]));
                     if ($fund === false) {
                         $depositedToModified = "Deleted";
                     } else {
                         $depositedToModified = $fund["fundName"];
                     }
+
+                    $deposits[count($deposits)] = [
+                        "id" => $row["id"], "depositSource" => $row["depositSource"], "depositedTo" => $depositedToModified,
+                        "depositedAmount" => $depositPortion, "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]), 'userId' => intval($userId)
+                    ];
                 }
 
-
-                $deposits[count($deposits)] = [
-                    "id" => $row["id"],
-                    "depositSource" => $row["depositSource"],
-                    "depositedTo" => $depositedToModified,
-                    "depositedAmount" => floatval($row["depositedAmount"]),
-                    "notes" => $row["notes"],
-                    "createdOn" => readableTimestamps($row["createdOn"]),
-                    "updatedOn" => readableTimestamps($row["updatedOn"]),
-                ];
+                return $deposits;
             }
-
-            return $deposits;
         }
 
         return false;
@@ -89,23 +91,25 @@ class Deposit extends DB
                         $notes,
                         $createdOn,
                         $updatedOn,
+                        $userId
                     );
                     $stmt->fetch();
 
-                    $depositedToModified = $depositedTo == "all" ? $depositedTo : "Deleted";
-                    if ($depositedTo != "all") {
-                        $fund = Fund::find(intval($depositedTo));
-                        if ($fund === false) {
-                            $depositedToModified = "Deleted";
-                        } else {
-                            $depositedToModified = $fund["fundName"];
-                        }
+                    $depositedToModified = "Deleted";
+                   
+                    $fund = Fund::find(intval($depositedTo));
+                    if ($fund === false) {
+                        $depositedToModified = "Deleted";
+                    } else {
+                        $depositedToModified = $fund["fundName"];
                     }
+                    
 
                     return [
                         "id" => $id, "depositSource" => $depositSource, "depositedTo" => $depositedToModified,
                         "depositedAmount" => floatval($depositedAmount), "notes" => $notes, "createdOn" => readableTimestamps($createdOn),
                         "updatedOn" => readableTimestamps($updatedOn),
+                        "userId" => intval($userId)
                     ];
                 }
             }
@@ -120,35 +124,26 @@ class Deposit extends DB
         if ($fund === false) return false;
 
         $conn = DB::connect();
-        $sql = "SELECT * FROM deposits WHERE depositedTo = ? OR depositedTo = ?";
+        $sql = "SELECT * FROM deposits WHERE depositedTo = ?";
 
         if ($stmt = $conn->prepare($sql)) {
-            $all = "all";
-            $stmt->bind_param("ss", $fundId, $all);
+            $intvalFundId = intval($fundId);
+            $stmt->bind_param("i", $intvalFundId);
             if ($stmt->execute()) {
                 $result = $stmt->get_result();
                 $deposits = [];
 
                 while ($row = $result->fetch_assoc()) {
                     $depositPortion = floatval($row["depositedAmount"]);
-                    if ($row["depositedTo"] == "all") {
-                        $depositPortion *= floatval($fund["fundPercentage"] / 100);
-                    }
 
-                    $depositedToModified = $row["depositedTo"] == "all" ? $row["depositedTo"] : "";
-                    if ($row["depositedTo"] != "all") {
-                        $fund = Fund::find(intval($row["depositedTo"]));
-                        if ($fund === false) {
-                            $depositedToModified = "Deleted";
-                        } else {
-                            $depositedToModified = $fund["fundName"];
-                        }
-                    }
+                    $fund = Fund::find(intval($row["depositedTo"]));
+                    $depositedToModified = $fund["fundName"];
 
                     $deposits[count($deposits)] = [
                         "id" => $row["id"], "depositSource" => $row["depositSource"], "depositedTo" => $depositedToModified,
                         "depositedAmount" => $depositPortion, "notes" => $row["notes"], "createdOn" => readableTimestamps($row["createdOn"]),
-                        "updatedOn" => readableTimestamps($row["updatedOn"]),
+                        "updatedOn" => readableTimestamps($row["updatedOn"]), 
+                        "userId" => intval($row["userId"])
                     ];
                 }
 
@@ -166,16 +161,18 @@ class Deposit extends DB
 
         // proceed
         $conn = DB::connect();
-        $sql = "INSERT INTO deposits (depositSource, depositedTo, depositedAmount, notes, createdOn) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO deposits (depositSource, depositedTo, depositedAmount, notes, createdOn, userId) VALUES (?, ?, ?, ?, ?, ?)";
         if ($stmt = $conn->prepare($sql)) {
             $createdOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
+            $intvalUserId = intval($this->userId);
             $stmt->bind_param(
-                "sssss",
+                "sssssi",
                 $this->depositSource,
                 $this->depositedTo,
                 $this->depositedAmount,
                 $this->notes,
-                $createdOn
+                $createdOn,
+                $intvalUserId
             );
             if ($stmt->execute()) return true;
         }

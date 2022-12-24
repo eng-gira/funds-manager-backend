@@ -1,6 +1,7 @@
 <?php
 
 include_once INC . "Env.php";
+include_once INC . "functions.php";
 
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
@@ -21,7 +22,7 @@ class Auth {
      * 
      * @return bool
      */
-    public static function verifyToken(string $token): bool {
+    private static function verifyToken(string $token): array|false {
         try {
             
             return (array) JWT::decode($token, new Key(Env::get('JWT_SECRET_KEY'), 'HS512'));
@@ -35,5 +36,16 @@ class Auth {
 
             return false;
         }
+    }
+
+    public static function userId() {
+        $payload = self::tokenPayload();
+        return $payload === false ? false : $payload['user']->id;
+    }
+
+    public static function tokenPayload() {
+        $token = getTokenFromRequestHeader();
+        if(!$token) return false;
+        return self::verifyToken($token);
     }
 }
