@@ -14,7 +14,12 @@ class Application
     {
         include_once CONTROLLER . $this->defaultController . ".php";
 
-        $this->readEndPoint();
+        try {
+            $this->readEndPoint();
+        } catch(\Exception $e) {
+            echo json_encode(['message' => 'failed', 'data' => $e->getMessage()]);
+            return false;
+        }
 
         if (file_exists(CONTROLLER . $this->controller . ".php")) {
             include_once CONTROLLER . $this->controller . ".php";
@@ -33,11 +38,11 @@ class Application
     {
         $url = $_SERVER["REQUEST_URI"];
 
-        $indexOfAPI = strpos($url, "api/");
+        $indexOfAPI = strpos($url, "api");
 
-        if ($indexOfAPI === false) return false;
+        if ($indexOfAPI === false) throw new \Exception("Not Found");
 
-        $apiLengthPlusOne = strlen("api/");
+        $apiLengthPlusOne = strlen("api") + 1;
 
         $endPoint = trim(substr($url, $indexOfAPI + $apiLengthPlusOne), "/");
         $endPointArr = explode("/", $endPoint);
