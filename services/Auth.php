@@ -17,20 +17,14 @@ class Auth {
     }
 
     /**
-     * @param int $userId
      * @param string $token - the JWT.
      * 
      * @return bool
      */
-    public static function verifyTokenForUser(int $userId, string $token): bool {
+    public static function verifyToken(string $token): bool {
         try {
-            $payload = (array) JWT::decode($token, new Key(Env::get('JWT_SECRET_KEY'), 'HS512'));
-
-            $userIdInToken = $payload['user']->id;
-
-            if($userId == intval($userIdInToken)) return true; 
-
-            return false;
+            
+            return (array) JWT::decode($token, new Key(Env::get('JWT_SECRET_KEY'), 'HS512'));
 
         } catch (ExpiredException $eE) {
             echo json_encode(['message' => 'failed', 'data' => 'token expired. ' . $eE->getMessage()]);
