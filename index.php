@@ -16,9 +16,6 @@ define("SERVICE",  "services" . DIRECTORY_SEPARATOR);
 // Set the timezone
 date_default_timezone_set("Africa/Cairo");
 
-// Read the env. variables
-Env::readEnvFile('C:\xampp\htdocs\funds-manager-backend\.env.local');
-
 // Setup autoloading explicilty for firebase/php-jwt lib.
 spl_autoload_register(function ($class) {
     $classNamespaceArr = explode('\\', $class);
