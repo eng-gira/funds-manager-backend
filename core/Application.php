@@ -36,6 +36,12 @@ class Application
 
     private function readEndPoint()
     {
+        // CORS
+        if($_SERVER["REQUEST_METHOD"] == 'OPTIONS') {
+            http_response_code(200);
+            exit;
+        }
+
         $url = $_SERVER["REQUEST_URI"];
 
         $indexOfAPI = strpos($url, "api");

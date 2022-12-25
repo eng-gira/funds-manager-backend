@@ -28,7 +28,7 @@ class Withdrawal extends DB implements Model
     public static function whereUserIdIs($userId): array|bool
     {
         $conn = DB::connect();
-        $sql = "SELECT * FROM withdrawals WHERE user_id = ?";
+        $sql = "SELECT * FROM withdrawals WHERE userId = ?";
 
         if ($stmt = $conn->prepare($sql)) {
             $intvalUserId = intval($userId);

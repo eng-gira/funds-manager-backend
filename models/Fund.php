@@ -376,12 +376,12 @@ class Fund extends DB implements Model
         return false;
     }
 
-    private function logDeposit($depositSource, $depositedTo, $depositedAmount, $notes, $userId) {
+    private static function logDeposit($depositSource, $depositedTo, $depositedAmount, $notes, $userId) {
         $deposit = new Deposit($depositSource, $depositedTo, $depositedAmount, $notes, $userId);
         return $deposit->save();
     }
 
-    private function logWithdrawal($fundId, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId) {
+    private static function logWithdrawal($fundId, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId) {
         $withdrawal = new Withdrawal($fundId, $withdrawnAmount, $withdrawalReason, $withdrawalNotes, $userId);
         return $withdrawal->save();
     }

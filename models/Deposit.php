@@ -137,8 +137,6 @@ class Deposit extends DB implements Model
 
                 while ($row = $result->fetch_assoc()) {
                     $depositPortion = floatval($row["depositedAmount"]);
-
-                    $fund = Fund::find(intval($row["depositedTo"]));
                     $depositedToModified = $fund["fundName"];
 
                     $deposits[count($deposits)] = [
