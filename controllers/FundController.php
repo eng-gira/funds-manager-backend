@@ -183,8 +183,14 @@ class FundController
         $result = false;
         if (strval($data->depositedTo) != "all") {
             // deposit to a specific fund
+            $fund = Fund::find(intval($data->depositedTo));
+            if($fund['userId'] != Auth::userId()) {
+                http_response_code(403);
+                return false;
+            }
             $result = Fund::deposit(intval($data->depositedTo), $data->depositedAmount, $data->depositSource, $depositNotes, Auth::userId());
         } else {
+            // Deposits to all funds of Auth::userId()
             $result = Fund::depositToAll($data->depositedAmount, $data->depositSource, $depositNotes, Auth::userId());
         }
 
@@ -209,6 +215,11 @@ class FundController
         $withdrawalNotes = isset($data->notes) ? $data->notes : "";
         $withdrawalReason = isset($data->withdrawalReason) ? $data->withdrawalReason : "";
 
+        $fund = Fund::find(intval($data->withdrawnFrom));
+        if($fund['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
         $result = Fund::withdraw(intval($data->withdrawnFrom), $data->withdrawnAmount, $withdrawalReason, $withdrawalNotes, Auth::userId());
 
         header('Content-Type: application/json');
@@ -247,6 +258,11 @@ class FundController
             echo json_encode($depositsHistory !== false ? $depositsHistory : []);
             return;
         } else {
+            $fund = Fund::find(intval($for));
+            if($fund['userId'] != Auth::userId()) {
+                http_response_code(403);
+                return false;
+            }
             $depositsHistoryForFund = Deposit::whereFundIdIs($for);
             header('Content-Type: application/json');
             echo json_encode($depositsHistoryForFund !== false ? $depositsHistoryForFund : []);
@@ -267,6 +283,11 @@ class FundController
             header('Content-Type: application/json');
             echo json_encode($withdrawalsHistory !== false ? $withdrawalsHistory : []);
         } else {
+            $fund = Fund::find(intval($for));
+            if($fund['userId'] != Auth::userId()) {
+                http_response_code(403);
+                return false;
+            }
             $withdrawalsHistoryForFund = Withdrawal::whereFundIdIs($for);
             header('Content-Type: application/json');
             echo json_encode($withdrawalsHistoryForFund !== false ? $withdrawalsHistoryForFund : []);
@@ -284,6 +305,10 @@ class FundController
 
         $withdrawal = Withdrawal::find($id);
         if ($withdrawal !== false) {
+            if($withdrawal['userId'] != Auth::userId()) {
+                http_response_code(403);
+                return false;
+            }
             header('Content-Type: application/json');
             echo json_encode($withdrawal);
         } else {
@@ -305,6 +330,12 @@ class FundController
         if (!isset($data->id)) return false;
         $id = intval($data->id);
 
+        $withdrawal = Withdrawal::find($id);
+        if($withdrawal['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
+
         $result = Withdrawal::setNotes($id, $data->notes);
 
         header('Content-Type: application/json');
@@ -321,6 +352,11 @@ class FundController
 
         $deposit = Deposit::find($id);
         if ($deposit !== false) {
+            if($deposit['userId'] != Auth::userId()) {
+                http_response_code(403);
+                return false;
+            }
+    
             header('Content-Type: application/json');
             echo json_encode($deposit);
         } else {
@@ -339,6 +375,12 @@ class FundController
         $data = json_decode(file_get_contents("php://input"));
         if (!isset($data->id)) return false;
         $id = intval($data->id);
+
+        $deposit = Deposit::find($id);
+        if($deposit['userId'] != Auth::userId()) {
+            http_response_code(403);
+            return false;
+        }
 
         $result = Deposit::setNotes($id, $data->notes);
 
