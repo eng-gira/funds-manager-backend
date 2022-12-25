@@ -2,20 +2,28 @@
 
 
 class Env {
-    private static array $env = [];
+    private static bool $envSaved = false;
     private static string $envFilePath = 'C:\xampp\htdocs\funds-manager-backend\.env';
 
     public static function get($key) {
-        if(count(self::$env) < 1) self::readEnvFile(self::$envFilePath);
-        return self::$env[$key];
+        if(self::$envSaved === false) 
+        {
+            self::saveEnvFile(self::$envFilePath);
+        }
+
+        // return getenv($key);
+        return apache_getenv($key);
     }
     
-    private static function readEnvFile($absFilePath) {
+    private static function saveEnvFile($absFilePath) {
         $envArr = file($absFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $envAssoc = [];
-        foreach($envArr as $line) $envAssoc[explode('=', $line)[0]] = explode('=', $line)[1];
+        // foreach($envArr as $line) $envAssoc[explode('=', $line)[0]] = explode('=', $line)[1];
+        foreach($envArr as $line) {
+            // putenv(explode('=', $line)[0] . '=' . explode('=', $line)[1]);
+            apache_setenv(explode('=', $line)[0], explode('=', $line)[1]);
+        }
 
-        self::$env = $envAssoc;
+        self::$envSaved = true;
     }
 
 
