@@ -58,7 +58,8 @@ class User extends DB implements Model
         $sql = "SELECT id, name, email FROM users WHERE id = ?";
 
         if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("i", intval($id));
+            $intvalUserId = intval($id);
+            $stmt->bind_param("i", $intvalUserId);
 
             if ($stmt->execute()) {
                 $stmt->store_result();
@@ -103,7 +104,7 @@ class User extends DB implements Model
                     if($password != md5($credentials['password'])) return false;
 
                     return [
-                        "id" => $id, "name" => $name, "email" => $email, 'password' => $password
+                        "id" => $id, "name" => $name, "email" => $email
                     ];
                 }
             } 
