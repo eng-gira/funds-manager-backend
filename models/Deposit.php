@@ -2,6 +2,8 @@
 include_once DATA . "DB.php";
 include_once MODEL . "Fund.php";
 include_once MODEL . "Model.php";
+include_once MODEL . "User.php";
+
 class Deposit extends DB implements Model
 {
     private string $depositSource;

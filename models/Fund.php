@@ -4,6 +4,7 @@ include_once INC . "functions.php";
 include_once MODEL . "Model.php";
 include_once MODEL . "Deposit.php";
 include_once MODEL . "Withdrawal.php";
+include_once MODEL . "User.php";
 
 
 class Fund extends DB implements Model
