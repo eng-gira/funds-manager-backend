@@ -305,6 +305,8 @@ class Fund extends DB implements Model
             $updatedOn = date("Y") . date("m") . date("d") . date("H") . date("i") . date("s");
             $lastWithdrawal = $updatedOn;
             $newBalance = floatval($fund["balance"]) - floatval(abs($withdrawnAmount));
+            
+            if($newBalance < 0) return false;
 
             //
             $newTotalWithdrawals = floatval($fund["totalWithdrawals"]) + floatval(abs($withdrawnAmount));

@@ -7,7 +7,6 @@ include_once MODEL . "User.php";
 class AuthController {
     public static function register() {
         $data = json_decode(file_get_contents("php://input"));
-        echo file_get_contents('php://input');
         $name = $data->name;
         $email = $data->email;
         $password = $data->password;
@@ -15,6 +14,7 @@ class AuthController {
         if(User::save($name, $email, $password)) {
             $token = Auth::getTokenForUser(User::findByEmail($email));
             echo json_encode(['data' => $token]);
+            return;
         }
         else echo json_encode(['message' => 'failed', 'data' => 'Could not authenticate']);
     }
@@ -27,6 +27,7 @@ class AuthController {
         if($user) {
             $token = Auth::getTokenForUser($user);
             echo json_encode(['data' => $token]);
+            return;
         }
         else echo json_encode(['message' => 'failed', 'data' => 'Could not authenticate']);
     }
