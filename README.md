@@ -1,4 +1,4 @@
-# funds-manager-api
+# funds-manager-backend
 
 ## Description
 
