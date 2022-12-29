@@ -1,6 +1,6 @@
 <?php
 
-include_once INC . 'functions.php';
+include_once '.' . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'functions.php';
 
 
 class Application
