@@ -23,3 +23,6 @@ function getTokenFromRequestHeader(): string|false {
     
     return substr($authHeader, strlen('Bearer '));
 }
+function onlyFirstCharacterIsCapital(string $str) {
+    return strtoupper(substr($str, 0, 1)) . (strlen($str) > 1  ? substr($str, 1) : '');
+}

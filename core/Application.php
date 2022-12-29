@@ -1,5 +1,8 @@
 <?php
 
+include_once INC . 'functions.php';
+
+
 class Application
 {
     private $defaultController = "FundController";
@@ -52,7 +55,7 @@ class Application
 
         $endPoint = trim(substr($url, $indexOfAPI + $apiLengthPlusOne), "/");
         $endPointArr = explode("/", $endPoint);
-        if (count($endPointArr) > 0) $this->controller = strlen($endPointArr[0]) > 0 ? $endPointArr[0] . "Controller" : $this->defaultController;
+        if (count($endPointArr) > 0) $this->controller = strlen($endPointArr[0]) > 0 ? onlyFirstCharacterIsCapital($endPointArr[0]) . "Controller" : $this->defaultController;
         if (count($endPointArr) > 1) $this->action = strlen($endPointArr[1]) > 0 ? $endPointArr[1] : $this->defaultAction;
         if (count($endPointArr) > 2) $this->params = array_values(array_slice($endPointArr, 2));
     }
