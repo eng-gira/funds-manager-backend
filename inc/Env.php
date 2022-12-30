@@ -3,7 +3,7 @@
 
 class Env {
     private static bool $envSaved = false;
-    private static string $envFilePath = 'C:\xampp\htdocs\funds-manager-backend\.env';
+    private static string $envFilePath = '.\.env';
 
     public static function get($key) {
         if(self::$envSaved === false) 
