@@ -21,7 +21,8 @@ date_default_timezone_set("Africa/Cairo");
 // Setup autoloading explicilty for firebase/php-jwt lib.
 spl_autoload_register(function ($class) {
     $classNamespaceArr = explode('\\', $class);
-    require __DIR__ . '\vendor\firebase\php-jwt\src\\' . $classNamespaceArr[count($classNamespaceArr)-1] . '.php';
+    require __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'firebase' . DIRECTORY_SEPARATOR . 'php-jwt' . 
+        DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . $classNamespaceArr[count($classNamespaceArr)-1] . '.php';
 });
 
 // Start the application

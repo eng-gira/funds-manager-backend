@@ -3,7 +3,7 @@
 
 class Env {
     private static bool $envSaved = false;
-    private static string $envFilePath = '.\.env';
+    private static string $envFilePath = '.' . DIRECTORY_SEPARATOR . '.env';
 
     public static function get($key) {
         if(self::$envSaved === false) 
